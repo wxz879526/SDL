@@ -7,14 +7,6 @@
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-bld/
-[Bb]in/
 [Oo]bj/
 
 # Roslyn cache directories
@@ -57,6 +49,11 @@ dlldata.c
 *.pidb
 *.svclog
 *.scc
+*.VC.opendb
+*.VC.db
+*.1.tlog
+*.idb
+*.lastbuildstate
 
 # Chutzpah Test files
 _Chutzpah*
