@@ -1,10 +1,25 @@
+/*!
+ * \file main.cpp
+ * \date 2018/03/23 9:34
+ *
+ * \author wenxinzhou
+ * Contact: user@company.com
+ *
+ * \brief 
+ *
+ * TODO: input long description
+ *
+ * \note
+*/
+
 #include <windows.h>
 #include <string>
 #include "SDL.h"
+#include "SDL_image.h"
 
 SDL_Surface* load_image(std::string path)
 {
-	auto loadedImg = SDL_LoadBMP(path.c_str());
+	auto loadedImg = IMG_Load(path.c_str());
 	if (loadedImg != nullptr)
 	{
 		auto optimizedImg = SDL_DisplayFormat(loadedImg);
@@ -39,7 +54,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 		return 1;
 
 	auto screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
-	auto foreign = load_image("foreground.bmp");
+	auto foreign = load_image("look.png");
 	auto bk = load_image("background.bmp");
 
 	apply_surface(0, 0, bk, screen);
