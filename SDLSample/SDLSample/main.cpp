@@ -16,6 +16,17 @@
 #include <string>
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_events.h"
+
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
+const int SCREEN_BPP = 32;
+
+SDL_Surface *g_bkImage;
+SDL_Surface *g_screen;
+
+SDL_Event g_event;
+
 
 SDL_Surface* load_image(std::string path)
 {
@@ -42,32 +53,66 @@ void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* dest)
 	SDL_BlitSurface(source, nullptr, dest, &offset);
 }
 
+bool init()
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING))
+		return false;
+
+	g_screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
+
+	if (nullptr == g_screen)
+		return false;
+
+	SDL_WM_SetCaption("Event Test", nullptr);
+
+	return true;
+}
+
+bool load_files()
+{
+	g_bkImage = load_image("look.png");
+	if (nullptr == g_bkImage)
+		return false;
+
+	return true;
+}
+
+void cleanup()
+{
+	SDL_FreeSurface(g_bkImage);
+
+	SDL_Quit();
+}
+
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
-	const int SCREEN_WIDTH = 640;
-	const int SCREEN_HEIGHT = 480;
-	const int SCREEN_BPP = 32;
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
-		return 1;
+	if (!init())
+		return -1;
 
-	auto screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
-	auto foreign = load_image("look.png");
-	auto bk = load_image("background.bmp");
+	if (!load_files())
+		return -1;
 
-	apply_surface(0, 0, bk, screen);
-	apply_surface(320, 0, bk, screen);
-	apply_surface(0, 240, bk, screen);
-	apply_surface(320, 240, bk, screen);
+	apply_surface(0, 0, g_bkImage, g_screen);
 
-	apply_surface(180, 140, foreign, screen);
+	if (SDL_Flip(g_screen) == -1)
+		return -1;
 
-	SDL_Flip(screen);
-	SDL_Delay(10000);
-	
-	SDL_Quit();
+	auto quitFlag = false;
+	while (!quitFlag)
+	{
+		while (SDL_PollEvent(&g_event))
+		{
+			if (SDL_QUIT == g_event.type)
+			{
+				quitFlag = true;
+			}
+		}
+	}
+
+	cleanup();
 
 	return 0;
 }
