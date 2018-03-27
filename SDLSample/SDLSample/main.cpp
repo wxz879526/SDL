@@ -14,6 +14,7 @@
 
 #include <windows.h>
 #include <string>
+#include <array>
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_events.h"
@@ -22,8 +23,7 @@ const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_BPP = 32;
 
-SDL_Surface *g_bkImage;
-SDL_Surface *g_spriteImg;
+SDL_Surface *g_dot;
 SDL_Surface *g_screen;
 
 SDL_Event g_event;
@@ -36,12 +36,6 @@ SDL_Surface* load_image(std::string path)
 	{
 		auto optimizedImg = SDL_DisplayFormat(loadedImg);
 
-		if (optimizedImg != nullptr)
-		{
-			auto colorKey = SDL_MapRGB(optimizedImg->format, 0, 0xFF, 0xFF);
-			SDL_SetColorKey(optimizedImg, SDL_SRCCOLORKEY, colorKey);
-		}
-
 		SDL_FreeSurface(loadedImg);
 
 		return optimizedImg;
@@ -50,14 +44,14 @@ SDL_Surface* load_image(std::string path)
 	return nullptr;
 }
 
-void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* dest)
+void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* dest, SDL_Rect *clip)
 {
 	SDL_Rect offset;
 
 	offset.x = x;
 	offset.y = y;
 
-	SDL_BlitSurface(source, nullptr, dest, &offset);
+	SDL_BlitSurface(source, clip, dest, &offset);
 }
 
 bool init()
@@ -77,12 +71,8 @@ bool init()
 
 bool load_files()
 {
-	g_bkImage = load_image("background.png");
-	if (nullptr == g_bkImage)
-		return false;
-
-	g_spriteImg = load_image("foo.png");
-	if (nullptr == g_spriteImg)
+	g_dot = load_image("dots.png");
+	if (nullptr == g_dot)
 		return false;
 
 	return true;
@@ -90,8 +80,7 @@ bool load_files()
 
 void cleanup()
 {
-	SDL_FreeSurface(g_bkImage);
-	SDL_FreeSurface(g_spriteImg);
+	SDL_FreeSurface(g_dot);
 
 	SDL_Quit();
 }
@@ -107,8 +96,33 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	if (!load_files())
 		return -1;
 
-	apply_surface(0, 0, g_bkImage, g_screen);
-	apply_surface(240, 180, g_spriteImg, g_screen);
+	std::array<SDL_Rect, 4> clips;
+	clips[0].x = 0;
+	clips[0].y = 0;
+	clips[0].w = 100;
+	clips[0].h = 100;
+
+	clips[1].x = 100;
+	clips[1].y = 0;
+	clips[1].w = 100;
+	clips[1].h = 100;
+
+	clips[2].x = 0;
+	clips[2].y = 100;
+	clips[2].w = 100;
+	clips[2].h = 100;
+
+	clips[3].x = 100;
+	clips[3].y = 100;
+	clips[3].w = 100;
+	clips[3].h = 100;
+
+	SDL_FillRect(g_screen, &g_screen->clip_rect, SDL_MapRGB(g_screen->format, 0xFF, 0xFF, 0xFF));
+
+	apply_surface(0, 0, g_dot, g_screen, &clips[0]);
+	apply_surface(540, 0, g_dot, g_screen, &clips[1]);
+	apply_surface(0, 380, g_dot, g_screen, &clips[2]);
+	apply_surface(540, 380, g_dot, g_screen, &clips[3]);
 
 	if (SDL_Flip(g_screen) == -1)
 		return -1;
