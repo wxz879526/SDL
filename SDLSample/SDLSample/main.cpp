@@ -15,16 +15,21 @@
 #include <windows.h>
 #include <string>
 #include <array>
+#include <memory>
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_ttf.h"
 #include "SDL_events.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int SCREEN_BPP = 32;
 
-SDL_Surface *g_dot;
-SDL_Surface *g_screen;
+SDL_Surface* g_dot;
+SDL_Surface* g_screen;
+SDL_Surface* g_message;
+
+TTF_Font* g_font;
 
 SDL_Event g_event;
 
@@ -59,6 +64,9 @@ bool init()
 	if (SDL_Init(SDL_INIT_EVERYTHING))
 		return false;
 
+	if (TTF_Init() == -1)
+		return false;
+
 	g_screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
 
 	if (nullptr == g_screen)
@@ -75,12 +83,19 @@ bool load_files()
 	if (nullptr == g_dot)
 		return false;
 
+	g_font = TTF_OpenFont("lazy.ttf", 28);
+	if (nullptr == g_font)
+		return false;
+
 	return true;
 }
 
 void cleanup()
 {
 	SDL_FreeSurface(g_dot);
+	SDL_FreeSurface(g_message);
+
+	TTF_CloseFont(g_font);
 
 	SDL_Quit();
 }
@@ -123,6 +138,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	apply_surface(540, 0, g_dot, g_screen, &clips[1]);
 	apply_surface(0, 380, g_dot, g_screen, &clips[2]);
 	apply_surface(540, 380, g_dot, g_screen, &clips[3]);
+
+	SDL_Color textClr{ 0, 0, 0 };
+
+	g_message = TTF_RenderText_Solid(g_font, "wenxinzhou xxxxxx j", textClr);
+
+	apply_surface(150, 150, g_message, g_screen, nullptr);
 
 	if (SDL_Flip(g_screen) == -1)
 		return -1;
