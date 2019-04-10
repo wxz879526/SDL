@@ -22,40 +22,93 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+SDL_Window *gWindow;
+SDL_Surface *gImage;
+SDL_Surface *gImage2;
+SDL_Surface *gScreen;
+
+bool Init()
+{
+	bool bSuccess = true;
+
+	if (SDL_Init(SDL_INIT_VIDEO))
+	{
+		bSuccess = false;
+	}
+	else
+	{
+		gWindow = SDL_CreateWindow("Tutorial",
+			SDL_WINDOWPOS_UNDEFINED,
+			SDL_WINDOWPOS_UNDEFINED,
+			SCREEN_WIDTH,
+			SCREEN_HEIGHT,
+			SDL_WINDOW_SHOWN);
+		if (!gWindow)
+		{
+			bSuccess = false;
+		}
+		else
+		{
+			gScreen = SDL_GetWindowSurface(gWindow);
+		}
+	}
+
+	return true;
+}
+
+bool loadMedia()
+{
+	gImage = SDL_LoadBMP("1.bmp");
+	gImage2 = SDL_LoadBMP("2.bmp");
+	return gImage != nullptr;
+}
+
+void close()
+{
+	SDL_FreeSurface(gImage);
+	gImage = nullptr;
+
+	SDL_DestroyWindow(gWindow);
+	gWindow = nullptr;
+
+	SDL_Quit();
+}
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPSTR lpCmdLine,
 	_In_ int nShowCmd)
 {
-	SDL_Window *window = nullptr;
-	SDL_Surface *screenSurface = nullptr;
-
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-	{
-		MessageBox(NULL, _T("123"), _T("title"), MB_OK);
+	if (!Init())
 		return -1;
-	}
-	else
+
+	loadMedia();
+
+	bool quit = false;
+	SDL_Event e;
+
+	while (!quit)
 	{
-		window = SDL_CreateWindow("SDL learn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if (nullptr == window)
+		while (SDL_PollEvent(&e))
 		{
-			MessageBox(NULL, _T("create window failed"), _T("title"), MB_OK);
-			return -1;
+			if (e.type == SDL_QUIT)
+			{
+				quit = true;
+			}
 		}
-		else
-		{
-			screenSurface = SDL_GetWindowSurface(window);
 
-			SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0, 0, 0));
-			SDL_UpdateWindowSurface(window);
-			SDL_Delay(20000);
-		}
+		SDL_BlitSurface(gImage, nullptr, gScreen, nullptr);
+
+		SDL_Rect dest;
+		dest.x = 100;
+		dest.y = 100;
+		dest.w = 100;
+		dest.h = 100;
+		SDL_BlitSurface(gImage2, nullptr, gScreen, &dest);
+		SDL_UpdateWindowSurface(gWindow);
 	}
 
-	SDL_DestroyWindow(window);
-	SDL_Quit();
 
-
+	close();
+	
 	return 0;
 }
