@@ -70,7 +70,10 @@ bool Init()
 
 SDL_Surface* loadSurface(std::string path)
 {
-	return SDL_LoadBMP(path.c_str());
+	SDL_Surface *pOrgin = SDL_LoadBMP(path.c_str());
+	SDL_Surface *pOpt = SDL_ConvertSurface(pOrgin, gScreen->format, 0);
+	SDL_FreeSurface(pOrgin);
+	return pOpt;
 }
 
 bool loadMedia()
@@ -141,7 +144,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			}
 		}
 
-		SDL_BlitSurface(gCurrentSurface, NULL, gScreen, NULL);
+		SDL_Rect stretchRect;
+		stretchRect.x = 0;
+		stretchRect.y = 0;
+		stretchRect.w = SCREEN_WIDTH;
+		stretchRect.h = SCREEN_HEIGHT;
+
+		SDL_BlitScaled(gCurrentSurface, NULL, gScreen, &stretchRect);
 		SDL_UpdateWindowSurface(gWindow);
 	}
 
