@@ -18,6 +18,7 @@
 #include <array>
 #include <memory>
 #include "SDL.h"
+#include "SDL_image.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -61,6 +62,8 @@ bool Init()
 		}
 		else
 		{
+			int imgFlags = IMG_INIT_PNG;
+			IMG_Init(imgFlags);
 			gScreen = SDL_GetWindowSurface(gWindow);
 		}
 	}
@@ -70,7 +73,7 @@ bool Init()
 
 SDL_Surface* loadSurface(std::string path)
 {
-	SDL_Surface *pOrgin = SDL_LoadBMP(path.c_str());
+	SDL_Surface *pOrgin = IMG_Load(path.c_str());
 	SDL_Surface *pOpt = SDL_ConvertSurface(pOrgin, gScreen->format, 0);
 	SDL_FreeSurface(pOrgin);
 	return pOpt;
@@ -78,11 +81,11 @@ SDL_Surface* loadSurface(std::string path)
 
 bool loadMedia()
 {
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAILT] = loadSurface("press.bmp");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("up.bmp");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("down.bmp");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("left.bmp");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("right.bmp");
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAILT] = loadSurface("background.png");
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("background.png");
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("background.png");
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("look.png");
+	gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("background.png");
 	return true;
 }
 
