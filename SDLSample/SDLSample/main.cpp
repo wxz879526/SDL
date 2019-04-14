@@ -23,22 +23,22 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-enum KeyPressSurfaces
-{
-	KEY_PRESS_SURFACE_DEFAILT,
-	KEY_PRESS_SURFACE_UP,
-	KEY_PRESS_SURFACE_DOWN,
-	KEY_PRESS_SURFACE_LEFT,
-	KEY_PRESS_SURFACE_RIGHT,
-	KEY_PRESS_SURFACE_TOTAL
-};
-
-
 SDL_Window *gWindow;
-SDL_Surface *gScreen;
-SDL_Surface *gCurrentSurface;
+SDL_Texture *gTexture;
+SDL_Renderer *gRender;
 
-SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
+SDL_Texture* loadTexure(std::string path)
+{
+	SDL_Texture *newTexture = nullptr;
+	SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+
+	newTexture = SDL_CreateTextureFromSurface(gRender,
+		loadedSurface);
+
+	SDL_FreeSurface(loadedSurface);
+	return newTexture;
+}
+
 
 bool Init()
 {
@@ -62,44 +62,36 @@ bool Init()
 		}
 		else
 		{
+			gRender = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+
+			SDL_SetRenderDrawColor(gRender, 0xFF, 0xFF, 0xFF, 0xFF);
 			int imgFlags = IMG_INIT_PNG;
 			IMG_Init(imgFlags);
-			gScreen = SDL_GetWindowSurface(gWindow);
+			//gScreen = SDL_GetWindowSurface(gWindow);
 		}
 	}
 
 	return bSuccess;
 }
 
-SDL_Surface* loadSurface(std::string path)
-{
-	SDL_Surface *pOrgin = IMG_Load(path.c_str());
-	SDL_Surface *pOpt = SDL_ConvertSurface(pOrgin, gScreen->format, 0);
-	SDL_FreeSurface(pOrgin);
-	return pOpt;
-}
-
 bool loadMedia()
 {
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAILT] = loadSurface("background.png");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("background.png");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("background.png");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("look.png");
-	gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("background.png");
+	gTexture = loadTexure("background.png");
 	return true;
 }
 
 void close()
 {
-	for (int i =  0; i < KEY_PRESS_SURFACE_TOTAL; ++i)
-	{
-		SDL_FreeSurface(gKeyPressSurfaces[i]);
-		gKeyPressSurfaces[i] = nullptr;
-	}
+	SDL_DestroyTexture(gTexture);
+	gTexture = nullptr;
+
+	SDL_DestroyRenderer(gRender);
+	gRender = nullptr;
 
 	SDL_DestroyWindow(gWindow);
 	gWindow = nullptr;
 
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -115,7 +107,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	bool quit = false;
 
 	SDL_Event e;
-	gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAILT];
 
 	while (!quit)
 	{
@@ -125,38 +116,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			{
 				quit = true;
 			}
-			else if (e.type == SDL_KEYDOWN)
-			{
-				switch (e.key.keysym.sym)
-				{
-				case SDLK_UP:
-					gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
-					break;
-				case SDLK_DOWN:
-					gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
-					break;
-				case SDLK_LEFT:
-					gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
-					break;
-				case SDLK_RIGHT:
-					gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
-					break;
-				default:
-					gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAILT];
-				}
-			}
 		}
 
-		SDL_Rect stretchRect;
-		stretchRect.x = 0;
-		stretchRect.y = 0;
-		stretchRect.w = SCREEN_WIDTH;
-		stretchRect.h = SCREEN_HEIGHT;
+		SDL_SetRenderDrawColor(gRender, 0xFF, 0xFF, 0xFF, 0xFF);
+		SDL_RenderClear(gRender);
+		SDL_Rect fillRc = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+		SDL_SetRenderDrawColor(gRender, 0xFF, 0x00, 0x00, 0xFF);
+		SDL_RenderFillRect(gRender, &fillRc);
 
-		SDL_BlitScaled(gCurrentSurface, NULL, gScreen, &stretchRect);
-		SDL_UpdateWindowSurface(gWindow);
+		SDL_Rect fillRc2 = { SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6, SCREEN_WIDTH*2 / 3, SCREEN_HEIGHT*2 / 3 };
+		SDL_SetRenderDrawColor(gRender, 0x00, 0xFF, 0x00, 0xFF);
+		SDL_RenderDrawRect(gRender, &fillRc2);
+		SDL_RenderPresent(gRender);
 	}
-
 
 	close();
 	
