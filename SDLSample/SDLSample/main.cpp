@@ -23,9 +23,87 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
+class LTexture {
+public:
+	LTexture();
+	~LTexture();
+
+	bool loadFromFile(std::string path);
+
+	void free();
+
+	void render(int x, int y);
+
+	int getWidth();
+	int getHeight();
+
+private:
+	SDL_Texture *m_texture{ nullptr };
+
+	int mWidth{ 0 };
+	int mHeight{ 0 };
+};
+
 SDL_Window *gWindow;
 SDL_Texture *gTexture;
 SDL_Renderer *gRender;
+
+LTexture::LTexture()
+{
+
+}
+
+LTexture::~LTexture()
+{
+	free();
+}
+
+bool LTexture::loadFromFile(std::string path)
+{
+	free();
+
+	SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+
+	SDL_SetColorKey(loadedSurface, SDL_TRUE,
+		SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+	auto pNewTexture = SDL_CreateTextureFromSurface(gRender, loadedSurface);
+	mWidth = loadedSurface->w;
+	mHeight = loadedSurface->h;
+
+	SDL_FreeSurface(loadedSurface);
+	
+	m_texture = pNewTexture;
+	return true;
+}
+
+void LTexture::free()
+{
+	if (m_texture)
+	{
+		SDL_DestroyTexture(m_texture);
+		m_texture = nullptr;
+		mWidth = mHeight = 0;
+	}
+}
+
+void LTexture::render(int x, int y)
+{
+	SDL_Rect renderQuad = { x, y, mWidth, mHeight };
+	SDL_RenderCopy(gRender, m_texture, nullptr, &renderQuad);
+}
+
+int LTexture::getWidth()
+{
+	return mWidth;
+}
+
+int LTexture::getHeight()
+{
+	return mHeight;
+}
+
+LTexture gFooter;
+LTexture gBackgnd;
 
 SDL_Texture* loadTexure(std::string path)
 {
@@ -76,7 +154,9 @@ bool Init()
 
 bool loadMedia()
 {
-	gTexture = loadTexure("background.png");
+	gTexture = loadTexure("viewport.png");
+	gFooter.loadFromFile("foo.png");
+	gBackgnd.loadFromFile("background.png");
 	return true;
 }
 
@@ -120,13 +200,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 		SDL_SetRenderDrawColor(gRender, 0xFF, 0xFF, 0xFF, 0xFF);
 		SDL_RenderClear(gRender);
-		SDL_Rect fillRc = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-		SDL_SetRenderDrawColor(gRender, 0xFF, 0x00, 0x00, 0xFF);
-		SDL_RenderFillRect(gRender, &fillRc);
 
-		SDL_Rect fillRc2 = { SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6, SCREEN_WIDTH*2 / 3, SCREEN_HEIGHT*2 / 3 };
-		SDL_SetRenderDrawColor(gRender, 0x00, 0xFF, 0x00, 0xFF);
-		SDL_RenderDrawRect(gRender, &fillRc2);
+		gBackgnd.render(0, 0);
+
+		gFooter.render(100, 100);
+
 		SDL_RenderPresent(gRender);
 	}
 
